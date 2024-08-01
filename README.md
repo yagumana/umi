@@ -1,4 +1,4 @@
-# 手順
+# 手順　（人工知能応用プロジェクト、Imitation learning）
 Dockerをビルド
 ```console
 $ docker build -t manato.yaguchi_umi .
