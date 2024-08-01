@@ -39,6 +39,7 @@ $ ./shell_scripts/02_07.sh
 訓練 (docker環境内で実行)
 ```console
 $ python train.py --config-name=train_diffusion_unet_timm_umi_workspace task.dataset_path={path_to_session}/dataset.zarr.zip
+```
 
 # Universal Manipulation Interface
 
