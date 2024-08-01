@@ -1,12 +1,13 @@
 # dockerファイルをビルドするためのコマンド, dockerfileが存在するディレクトリで実行
 docker build -t manato.yaguchi_umi .
 
-# dockerコンテナを起動するコマンド
-docker container run -v /home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface:/workspace --gpus '"device=0"' -it --name manato.yaguchi_umi manato.yaguchi_umi
+# dockerコンテナを起動するコマンド(通常のやつ、docker内でdockerを起動するやつ)
+docker container run -v /home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface:/workspace --gpus '"device=0"' -it --name manato.yaguchi_umi --shm-size=32g manato.yaguchi_umi
+↓ こっちを使う
 docker container run -v /home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface:/workspace \
                      -v /var/run/docker.sock:/var/run/docker.sock \
                      --gpus '"device=0"' \
-                     -it --name manato.yaguchi_umi manato.yaguchi_umi
+                     -it --name manato.yaguchi_umi --shm-size=32g manato.yaguchi_umi
 
 # すでに起動済みのdockerコンテナに対話シェルを通して操作するコマンド
 docker exec -it manato.yaguchi_umi /bin/bash
@@ -29,6 +30,9 @@ python main.py --config="configs/ddpm/cifar10.py" --mode="fid_stats" --workdir="
 python main.py --config="configs/ddpm/cifar10.py" --mode="eval" --workdir="./results/ddpm_cifar10"
 
 
+# 動画ファイルの転送
+scp /Users/manatoyaguchi/Documents/research/umi/100GOPRO_0606/GX010017.MP4 robot_dev6:/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface/pick_place_demo_session
+
 # dataの準備
 /path_to_session/raw_videosにmp4ファイルを入れる
 /path_to_session/raw_videos/grippe_calibrationに、calibration用のmp4ファイルを入れる
@@ -37,22 +41,42 @@ mapping.mp4という名前に、mapping用の動画の名前を変更する
 # slampipline
 0.
 python scripts_slam_pipeline/00_process_videos.py example_demo_session
+python scripts_slam_pipeline/00_process_videos.py pick_place_demo_session
+
 1.
-./shell_scripts/01.sh
-python scripts_slam_pipeline/01_extract_gopro_imu.py example_demo_session
+./shell_scripts/01.sh pick_place_demo_session
+↑こっちが動く (docker環境ではなく、通常の環境で動かすことを想定)
+
+2-7.(02~07をまとめて動かす) 
+./shell_scripts/02_07.sh pick_place_demo_session /home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface
+
 2. 
-python scripts_slam_pipeline/02_create_map.py --input_dir example_demo_session/demos/mapping --map_path example_demo_session/demos/mapping/map_atlas.osa
-↑こっちが動く
+python scripts_slam_pipeline/02_create_map.py --input_dir pick_place_demo_session/demos/mapping --map_path pick_place_demo_session/demos/mapping/map_atlas.osa
+↑こっちが動く (02_create_map.pyの video_dir2, map_path2を設定)
+
 (./shell_scripts/02.sh input_dir map_path no_docker_pull no_mask)
+(./shell_scripts/02.sh example_demo_session/demos/mapping example_demo_session/demos/mapping/map_atlas.osa false false)
+
 3.
 python scripts_slam_pipeline/03_batch_slam.py --input_dir example_demo_session/demos --map_path example_demo_session/demos/mapping/map_atlas.osa
+python scripts_slam_pipeline/03_batch_slam.py --input_dir pick_place_demo_session/demos --map_path pick_place_demo_session/demos/mapping/map_atlas.osa
+
 4.
 python scripts_slam_pipeline/04_detect_aruco.py --input_dir example_demo_session/demos --camera_intrinsics /workspace/example/calibration/gopro_intrinsics_2_7k.json --aruco_yaml /workspace/example/calibration/aruco_config.yaml
+python scripts_slam_pipeline/04_detect_aruco.py --input_dir pick_place_demo_session/demos --camera_intrinsics /workspace/example/calibration/gopro_intrinsics_2_7k.json --aruco_yaml /workspace/example/calibration/aruco_config.yaml
+
 5.
 python scripts_slam_pipeline/05_run_calibrations.py example_demo_session
+python scripts_slam_pipeline/05_run_calibrations.py pick_place_demo_session
+
 6.
 python scripts_slam_pipeline/06_generate_dataset_plan.py --input example_demo_session
+python scripts_slam_pipeline/06_generate_dataset_plan.py --input pick_place_demo_session
+
 7.
 python scripts_slam_pipeline/07_generate_replay_buffer.py -o example_demo_session/dataset.zarr.zip example_demo_session
+python scripts_slam_pipeline/07_generate_replay_buffer.py -o pick_place_demo_session/dataset.zarr.zip pick_place_demo_session
 
+訓練.
 python train.py --config-name=train_diffusion_unet_timm_umi_workspace task.dataset_path=example_demo_session/dataset.zarr.zip
+python train.py --config-name=train_diffusion_unet_timm_umi_workspace task.dataset_path=pick_place_demo_session/dataset.zarr.zip

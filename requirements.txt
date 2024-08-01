@@ -13,7 +13,7 @@ pyyaml
 tqdm
 zarr==2.16
 numcodecs
-hydra-core-co
+hydra-core
 wandb
 dill
 einops

@@ -24,11 +24,17 @@ from umi.common.cv_util import draw_predefined_mask
 # %%
 @click.command()
 @click.option('-i', '--input_dir', required=True, help='Directory for mapping video')
+@click.option('-b', '--base_dir', required=True, help='Base directory for the new workspace')
 @click.option('-m', '--map_path', default=None, help='ORB_SLAM3 *.osa map atlas file')
 @click.option('-d', '--docker_image', default="chicheng/orb_slam3:latest")
 @click.option('-np', '--no_docker_pull', is_flag=True, default=False, help="pull docker image from docker hub")
 @click.option('-nm', '--no_mask', is_flag=True, default=False, help="Whether to mask out gripper and mirrors. Set if map is created with bare GoPro no on gripper.")
-def main(input_dir, map_path, docker_image, no_docker_pull, no_mask):
+def main(input_dir, base_dir, map_path, docker_image, no_docker_pull, no_mask):
+    video_dir2 = os.path.join(base_dir, input_dir)
+    map_path2 = os.path.join(base_dir, map_path)
+    
+    
+    
     video_dir = pathlib.Path(os.path.expanduser(input_dir)).absolute()
     for fn in ['raw_video.mp4', 'imu_data.json']:
         assert video_dir.joinpath(fn).is_file()
@@ -69,10 +75,12 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask):
     map_mount_source = pathlib.Path(map_path)
     map_mount_target = pathlib.Path('/map').joinpath(map_mount_source.name)
     print(f"video_dir: {video_dir}")
-    video_dir2 = "/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface/example_demo_session/demos/mapping"
+    # video_dir2 = os.path.join(base_dir, input_dir)
+    # video_dir2 = "/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface/pick_place_demo_session/demos/mapping"
     video_dir2 = pathlib.Path(video_dir2)  # str型をpathlib.Path型に変換
     
-    map_path2 =  "/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface/example_demo_session/demos/mapping/map_atlas.osa"
+    # map_path2 = os.path.join(base_dir, map_path)
+    # map_path2 =  "/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface/pick_place_demo_session/demos/mapping/map_atlas.osa"
     map_mount_source2 = pathlib.Path(map_path2)
     
     

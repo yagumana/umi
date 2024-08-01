@@ -8,8 +8,8 @@ no_docker_pull=$3
 no_mask=$4
 
 # 絶対パスに変換
-video_dir=$(readlink $input_dir)
-map_path=$(readlink $map_path)
+video_dir=$(realpath $input_dir)
+map_path=$(realpath $map_path)
 
 # Dockerイメージのプル
 if [ "$no_docker_pull" != "true" ]; then

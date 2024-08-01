@@ -38,19 +38,21 @@ def runner(cmd, cwd, stdout_path, stderr_path, timeout, **kwargs):
 # %%
 @click.command()
 @click.option('-i', '--input_dir', required=True, help='Directory for demos folder')
+@click.option('-b', '--base_dir', required=True, help='Base directory for the new workspace')
 @click.option('-m', '--map_path', default=None, help='ORB_SLAM3 *.osa map atlas file')
 @click.option('-d', '--docker_image', default="chicheng/orb_slam3:latest")
 @click.option('-n', '--num_workers', type=int, default=None)
 @click.option('-ml', '--max_lost_frames', type=int, default=60)
 @click.option('-tm', '--timeout_multiple', type=float, default=16, help='timeout_multiple * duration = timeout')
 @click.option('-np', '--no_docker_pull', is_flag=True, default=False, help="pull docker image from docker hub")
-def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeout_multiple, no_docker_pull):
+def main(input_dir, base_dir, map_path, docker_image, num_workers, max_lost_frames, timeout_multiple, no_docker_pull):
     input_dir = pathlib.Path(os.path.expanduser(input_dir)).absolute()
     print(f"input_dir: {input_dir}")
     input_video_dirs2 = []
     for x in input_dir.glob('demo*/raw_video.mp4'):
         # 置き換えたい新しいベースディレクトリ
-        new_base_dir = pathlib.Path("/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface")
+        # new_base_dir = pathlib.Path("/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface")
+        new_base_dir = pathlib.Path(base_dir)
 
         # 'workspace' の部分を削除した後のパスを取得
         relative_path = x.relative_to("/workspace")
@@ -62,7 +64,7 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
         
     for x in input_dir.glob('map*/raw_video.mp4'):
         # 置き換えたい新しいベースディレクトリ
-        new_base_dir = pathlib.Path("/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface")
+        new_base_dir = pathlib.Path(base_dir)
         
         # 'workspace' の部分を削除した後のパスを取得
         relative_path = x.relative_to("/workspace")
@@ -147,12 +149,14 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
                 print(f"video_dir: {video_dir}")
                 print(f"map_mount_source: {map_mount_source}")
                 # 置き換えたい新しいベースディレクトリ
-                new_base_dir = pathlib.Path("/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface")
+                new_base_dir = pathlib.Path(base_dir)
                 # 'workspace' の部分を削除した後のパスを取得
-                relative_path = video_dir.relative_to("/workspace")
+                relative_video_path = video_dir.relative_to("/workspace")
+                relative_map_mount_source = map_mount_source.relative_to("/workspace")
                 
                 # 新しいベースディレクトリを結合
-                video_dir2 = new_base_dir.joinpath(relative_path)
+                video_dir2 = new_base_dir.joinpath(relative_video_path)
+                map_mount_source2 = new_base_dir.joinpath(relative_map_mount_source)
                 
                 
                 # run SLAM
@@ -161,7 +165,7 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
                     'run',
                     '--rm', # delete after finish
                     '--volume', str(video_dir2) + ':' + '/data',
-                    '--volume', str(map_mount_source.parent) + ':' + str(map_mount_target.parent),
+                    '--volume', str(map_mount_source2.parent) + ':' + str(map_mount_target.parent),
                     docker_image,
                     '/ORB_SLAM3/Examples/Monocular-Inertial/gopro_slam',
                     '--vocabulary', '/ORB_SLAM3/Vocabulary/ORBvoc.txt',

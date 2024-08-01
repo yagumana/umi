@@ -1,9 +1,14 @@
 #!/bin/bash
 
-# パスの定義
-# video_dir=$1
+# スクリプト実行時に渡される引数 (ex. pick_place_demo_session)
+session_dir=$1
+
+# 現在のパスを取得
+current_dir=$(pwd)
+
 # ベースディレクトリの定義
-base_dir="/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface/example_demo_session/demos/*"
+base_dir="${current_dir}/${session_dir}/demos/*"
+
 docker_image="chicheng/openicc:latest"
 mount_target="/data"
 
