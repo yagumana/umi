@@ -1,3 +1,45 @@
+# 手順
+Dockerをビルド
+```console
+$ docker build -t manato.yaguchi_umi .
+```
+Dockerを起動
+```console
+$ docker container run -v /home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface:/workspace \
+                     -v /var/run/docker.sock:/var/run/docker.sock \
+                     --gpus '"device=0"' \
+                     -it --name manato.yaguchi_umi --shm-size=32g manato.yaguchi_umi
+```
+
+起動したDocker内に入る
+```console
+$ docker exec -it manato.yaguchi_umi /bin/bash
+```
+
+dataの準備
+/path_to_session/raw_videosにmp4ファイルを入れる  
+/path_to_session/raw_videos/grippe_calibrationに、calibration用のmp4ファイルを入れる  
+mapping.mp4という名前に、mapping用の動画の名前を変更する  
+
+前処理00 (docker環境内で実行)
+```console
+$ python scripts_slam_pipeline/00_process_videos.py path_to_session
+```
+
+前処理01 (docker環境の外で実行)
+```console
+$ ./shell_scripts/01.sh path_to_session
+```
+
+前処理02-07 (docker環境内で実行)
+```console
+$ ./shell_scripts/02_07.sh
+```
+
+訓練 (docker環境内で実行)
+```console
+$ python train.py --config-name=train_diffusion_unet_timm_umi_workspace task.dataset_path={path_to_session}/dataset.zarr.zip
+
 # Universal Manipulation Interface
 
 [[Project page]](https://umi-gripper.github.io/)
