@@ -26,9 +26,13 @@ def main(session_dir, calibration_dir):
     else:
         calibration_dir = pathlib.Path(calibration_dir)
     assert calibration_dir.is_dir()
+    
+    print(calibration_dir)
+    print(session_dir)
 
     for session in session_dir:
         session = pathlib.Path(os.path.expanduser(session)).absolute()
+        print(session)
 
         print("############## 00_process_videos #############")
         script_path = script_dir.joinpath("00_process_videos.py")

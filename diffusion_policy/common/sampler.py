@@ -32,13 +32,21 @@ class SequenceSampler:
         repeat_frame_prob: float=0.0,
         max_duration: Optional[float]=None
     ):
-        episode_ends = replay_buffer.episode_ends[:]
+        print(f"Replay buffer keys: {replay_buffer.keys()}")  # デバッグ出力
+        print(f"Replay buffer episode_ends shape: {replay_buffer.meta.keys()}")  # デバッグ出力
 
+        episode_ends = replay_buffer.episode_ends[:]
+        print("episode_ends", episode_ends)  # デバッグ出力
         # load gripper_width
+        print(replay_buffer['robot0_gripper_width'].shape)  # デバッグ出力
+        print("ok")
         gripper_width = replay_buffer['robot0_gripper_width'][:, 0]
+        print("ok2")
+        print("gripper_width shape:", gripper_width.shape)  # デバッグ出力
         gripper_width_threshold = 0.08
         self.repeat_frame_prob = repeat_frame_prob
 
+        print(10)
         # create indices, including (current_idx, start_idx, end_idx)
         indices = list()
         for i in range(len(episode_ends)):
@@ -57,6 +65,7 @@ class SequenceSampler:
                     before_first_grasp = False
                 indices.append((current_idx, start_idx, end_idx, before_first_grasp))
         
+        print(11)
         # load low_dim to memory and keep rgb as compressed zarr array
         self.replay_buffer = dict()
         self.num_robot = 0
@@ -89,7 +98,7 @@ class SequenceSampler:
         for key in rgb_keys:
             self.replay_buffer[key] = replay_buffer[key]
         
-        
+        print(12)
         if 'action' in replay_buffer:
             self.replay_buffer['action'] = replay_buffer['action'][:]
         else:

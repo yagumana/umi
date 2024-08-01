@@ -43,7 +43,6 @@ def main(docker_image, num_workers, no_docker_pull, session_dir):
     for session in session_dir:
         input_dir = pathlib.Path(os.path.expanduser(session)).joinpath('demos')
         input_video_dirs = [x.parent for x in input_dir.glob('*/raw_video.mp4')]
-        print(input_video_dirs)
         print(f'Found {len(input_video_dirs)} video dirs')
 
         with tqdm(total=len(input_video_dirs)) as pbar:
@@ -61,7 +60,6 @@ def main(docker_image, num_workers, no_docker_pull, session_dir):
                     json_path = mount_target.joinpath('imu_data.json')
 
                     print(f"video_dir: {video_dir}")
-                    print(f"json_path: {json_path}")
                     
                     # run imu extractor
                     cmd = [

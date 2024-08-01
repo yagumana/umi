@@ -105,12 +105,32 @@ class TrainDiffusionUnetImageWorkspace(BaseWorkspace):
             if lastest_ckpt_path.is_file():
                 accelerator.print(f"Resuming from checkpoint {lastest_ckpt_path}")
                 self.load_checkpoint(path=lastest_ckpt_path)
+        # print("prepare dataset")
+        # try:
+        #     # configure dataset
+        #     dataset: BaseImageDataset
+        #     dataset = hydra.utils.instantiate(cfg.task.dataset)
+        #     assert isinstance(dataset, BaseImageDataset) or isinstance(dataset, BaseDataset)
+        #     train_dataloader = DataLoader(dataset, **cfg.dataloader)
+        #     print("prepared dataset")
 
+        #     # データセットの形状をデバッグ出力
+        #     for i, data in enumerate(train_dataloader):
+        #         print(f"Batch {i} - Data Keys: {data.keys()}")
+        #         for key, value in data.items():
+        #             print(f"Key: {key}, Shape: {value.shape}")
+        #         if i == 0:  # 最初のバッチだけをチェック
+        #             break
+        # except Exception as e:
+        #     print(f"Error during dataset preparation: {e}")
+        #     raise
+        
         # configure dataset
         dataset: BaseImageDataset
         dataset = hydra.utils.instantiate(cfg.task.dataset)
         assert isinstance(dataset, BaseImageDataset) or isinstance(dataset, BaseDataset)
         train_dataloader = DataLoader(dataset, **cfg.dataloader)
+        print("prepared dataset")
 
         # compute normalizer on the main process and save to disk
         normalizer_path = os.path.join(self.output_dir, 'normalizer.pkl')
@@ -204,6 +224,8 @@ class TrainDiffusionUnetImageWorkspace(BaseWorkspace):
             cfg.training.val_every = 1
             cfg.training.sample_every = 1
 
+        print("Start training")
+        
         # training loop
         log_path = os.path.join(self.output_dir, 'logs.json.txt')
         with JsonLogger(log_path) as json_logger:

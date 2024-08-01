@@ -19,6 +19,7 @@ import subprocess
 @click.argument('session_dir', nargs=-1)
 def main(session_dir):
     script_dir = pathlib.Path(__file__).parent.parent.joinpath('scripts')
+    print(session_dir)
     
     for session in session_dir:
         session = pathlib.Path(session)
@@ -30,6 +31,7 @@ def main(session_dir):
         script_path = script_dir.joinpath('calibrate_slam_tag.py')
         assert script_path.is_file()
         tag_path = mapping_dir.joinpath('tag_detection.pkl')
+        print(tag_path)
         assert tag_path.is_file()
         csv_path = mapping_dir.joinpath('camera_trajectory.csv')
         if not csv_path.is_file():

@@ -155,6 +155,7 @@ class ReplayBuffer:
         src_root = zarr.group(src_store)
         root = None
         if store is None:
+            print("store is None")
             # numpy backend
             meta = dict()
             for key, value in src_root['meta'].items():
@@ -169,12 +170,17 @@ class ReplayBuffer:
             for key in keys:
                 arr = src_root['data'][key]
                 data[key] = arr[:]
+                # # ここでリシェイプを行う
+                # if data[key].ndim == 2 and data[key].shape[1] == 1:
+                #     data[key] = data[key].reshape(-1)
+                #     print("reshaped")
 
             root = {
                 'meta': meta,
                 'data': data
             }
         else:
+            print("store is not None")
             root = zarr.group(store=store)
             # copy without recompression
             n_copied, n_skipped, n_bytes_copied = zarr.copy_store(source=src_store, dest=store,
@@ -202,6 +208,15 @@ class ReplayBuffer:
                         source=value, dest=data_group, name=key,
                         chunks=cks, compressor=cpr, if_exists=if_exists
                     )
+                # ここでリシェイプを行う
+                # print(data_group[key].shape)
+                # if data_group[key].ndim == 2 and data_group[key].shape[1] == 1:
+                #     print("reshaped")
+                #     print(type(data_group[key]))
+                #     print(data_group[key][:,0].shape)
+                #     data_group[key] = data_group[key][:, 0]
+                # print(data_group[key].shape)
+                
         buffer = cls(root=root)
         return buffer
     

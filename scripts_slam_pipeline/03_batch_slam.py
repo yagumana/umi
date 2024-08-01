@@ -46,14 +46,54 @@ def runner(cmd, cwd, stdout_path, stderr_path, timeout, **kwargs):
 @click.option('-np', '--no_docker_pull', is_flag=True, default=False, help="pull docker image from docker hub")
 def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeout_multiple, no_docker_pull):
     input_dir = pathlib.Path(os.path.expanduser(input_dir)).absolute()
+    print(f"input_dir: {input_dir}")
+    input_video_dirs2 = []
+    for x in input_dir.glob('demo*/raw_video.mp4'):
+        # 置き換えたい新しいベースディレクトリ
+        new_base_dir = pathlib.Path("/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface")
+
+        # 'workspace' の部分を削除した後のパスを取得
+        relative_path = x.relative_to("/workspace")
+
+        # 新しいベースディレクトリを結合
+        new_path = new_base_dir.joinpath(relative_path)
+        
+        input_video_dirs2.append(new_path.parent)
+        
+    for x in input_dir.glob('map*/raw_video.mp4'):
+        # 置き換えたい新しいベースディレクトリ
+        new_base_dir = pathlib.Path("/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface")
+        
+        # 'workspace' の部分を削除した後のパスを取得
+        relative_path = x.relative_to("/workspace")
+        
+        # 新しいベースディレクトリを結合
+        new_path = new_base_dir.joinpath(relative_path)
+        
+        input_video_dirs2.append(new_path.parent)
+        
+
     input_video_dirs = [x.parent for x in input_dir.glob('demo*/raw_video.mp4')]
     input_video_dirs += [x.parent for x in input_dir.glob('map*/raw_video.mp4')]
     print(f'Found {len(input_video_dirs)} video dirs')
+    for x in input_dir.glob('demo*/raw_video.mp4'):
+        print(x.parent)
     
     if map_path is None:
         map_path = input_dir.joinpath('mapping', 'map_atlas.osa')
     else:
         map_path = pathlib.Path(os.path.expanduser(map_path)).absolute()
+    print(map_path)
+    # ファイルが存在するか確認
+    if not map_path.is_file():
+        print(f"Error: {map_path} does not exist or is not a file.")
+    else:
+        print(f"{map_path} exists and is a file.")
+    # ファイルが存在するか確認
+    if not map_path.exists():
+        print(f"Error: {map_path} does not exist.")
+    else:
+        print(f"{map_path} exists.")
     assert map_path.is_file()
 
     if num_workers is None:
@@ -103,13 +143,24 @@ def main(input_dir, map_path, docker_image, num_workers, max_lost_frames, timeou
 
                 map_mount_source = map_path
                 map_mount_target = pathlib.Path('/map').joinpath(map_mount_source.name)
-
+                
+                print(f"video_dir: {video_dir}")
+                print(f"map_mount_source: {map_mount_source}")
+                # 置き換えたい新しいベースディレクトリ
+                new_base_dir = pathlib.Path("/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface")
+                # 'workspace' の部分を削除した後のパスを取得
+                relative_path = video_dir.relative_to("/workspace")
+                
+                # 新しいベースディレクトリを結合
+                video_dir2 = new_base_dir.joinpath(relative_path)
+                
+                
                 # run SLAM
                 cmd = [
                     'docker',
                     'run',
                     '--rm', # delete after finish
-                    '--volume', str(video_dir) + ':' + '/data',
+                    '--volume', str(video_dir2) + ':' + '/data',
                     '--volume', str(map_mount_source.parent) + ':' + str(map_mount_target.parent),
                     docker_image,
                     '/ORB_SLAM3/Examples/Monocular-Inertial/gopro_slam',

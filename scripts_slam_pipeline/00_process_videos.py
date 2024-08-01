@@ -49,6 +49,7 @@ def main(session_dir):
         
         # create gripper calibration video if don't exist
         gripper_cal_dir = input_dir.joinpath('gripper_calibration')
+        print(gripper_cal_dir)
         if not gripper_cal_dir.is_dir():
             gripper_cal_dir.mkdir()
             print("raw_videos/gripper_calibration don't exist! Creating one with the first video of each camera serial.")

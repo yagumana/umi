@@ -44,12 +44,17 @@ class UmiDataset(BaseDataset):
         self.action_pose_repr = self.pose_repr.get('action_pose_repr', 'rel')
         
         if cache_dir is None:
+            print(1)
             # load into memory store
             with zarr.ZipStore(dataset_path, mode='r') as zip_store:
                 replay_buffer = ReplayBuffer.copy_from_store(
                     src_store=zip_store, 
                     store=zarr.MemoryStore()
                 )
+            for key in replay_buffer.keys():
+                print(f"Key: {key}, Shape: {replay_buffer[key].shape}")
+            print(f"Replay buffer keys: {replay_buffer.keys()}")  # デバッグ出力
+
         else:
             # TODO: refactor into a stand alone function?
             # determine path name
@@ -61,7 +66,7 @@ class UmiDataset(BaseDataset):
             cache_dir.mkdir(parents=True, exist_ok=True)
             cache_path = cache_dir.joinpath(cache_name + '.zarr.mdb')
             lock_path = cache_dir.joinpath(cache_name + '.lock')
-            
+           
             # load cached file
             print('Acquiring lock on cache.')
             with FileLock(lock_path):
@@ -87,6 +92,18 @@ class UmiDataset(BaseDataset):
             replay_buffer = ReplayBuffer.create_from_group(
                 group=zarr.group(store)
             )
+        
+        # # データの形状を確認
+        # for key in replay_buffer.keys():
+        #     data = replay_buffer[key]
+        #     print(f"Key: {key}, Shape: {data.shape}, Data: {data[:5]}")
+
+        #     if data.shape == (468, 1):
+        #         data = data.reshape(-1)
+        #         replay_buffer[key] = data
+        #         print(f"Reshaped Key: {key}, Shape: {data.shape}")
+
+        print(2)
         
         self.num_robot = 0
         rgb_keys = list()
@@ -118,6 +135,7 @@ class UmiDataset(BaseDataset):
             down_sample_steps = shape_meta['obs'][key]['down_sample_steps']
             key_down_sample_steps[key] = down_sample_steps
 
+        print(3)
         # solve action
         key_horizon['action'] = shape_meta['action']['horizon']
         key_latency_steps['action'] = shape_meta['action']['latency_steps']
@@ -134,7 +152,7 @@ class UmiDataset(BaseDataset):
         for key in lowdim_keys:
             if not 'wrt' in key:
                 self.sampler_lowdim_keys.append(key)
-    
+        print(4)
         for key in replay_buffer.keys():
             if key.endswith('_demo_start_pose') or key.endswith('_demo_end_pose'):
                 self.sampler_lowdim_keys.append(key)
@@ -142,7 +160,18 @@ class UmiDataset(BaseDataset):
                 key_horizon[key] = shape_meta['obs'][query_key]['horizon']
                 key_latency_steps[key] = shape_meta['obs'][query_key]['latency_steps']
                 key_down_sample_steps[key] = shape_meta['obs'][query_key]['down_sample_steps']
-
+        print(5)
+        print(f"shape_meta: {shape_meta}")
+        print(f"replay_buffer keys: {replay_buffer.keys()}")
+        print(f"rgb_keys: {rgb_keys}")
+        print(f"lowdim_keys: {self.sampler_lowdim_keys}")
+        print(f"key_horizon: {key_horizon}")
+        print(f"key_latency_steps: {key_latency_steps}")
+        print(f"key_down_sample_steps: {key_down_sample_steps}")
+        print(f"episode_mask: {train_mask}")
+        print(f"action_padding: {action_padding}")
+        print(f"repeat_frame_prob: {repeat_frame_prob}")
+        print(f"max_duration: {max_duration}")
         sampler = SequenceSampler(
             shape_meta=shape_meta,
             replay_buffer=replay_buffer,
@@ -156,6 +185,7 @@ class UmiDataset(BaseDataset):
             repeat_frame_prob=repeat_frame_prob,
             max_duration=max_duration
         )
+        print(6)
         self.shape_meta = shape_meta
         self.replay_buffer = replay_buffer
         self.rgb_keys = rgb_keys
@@ -170,7 +200,7 @@ class UmiDataset(BaseDataset):
         self.sampler = sampler
         self.temporally_independent_normalization = temporally_independent_normalization
         self.threadpool_limits_is_applied = False
-
+        print(7)
     
     def get_validation_dataset(self):
         val_set = copy.copy(self)
@@ -269,6 +299,10 @@ class UmiDataset(BaseDataset):
         for key in self.sampler_lowdim_keys:
             obs_dict[key] = data[key].astype(np.float32)
             del data[key]
+        
+        #  # 追加デバッグ出力
+        # for key in obs_dict:
+        #     print(f"Key: {key}, Shape: {obs_dict[key].shape}")
         
         # generate relative pose between two ees
         for robot_id in range(self.num_robot):

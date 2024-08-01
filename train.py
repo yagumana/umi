@@ -2,6 +2,7 @@
 Usage:
 Training:
 python train.py --config-name=train_diffusion_lowdim_workspace
+python train.py --config-name=train_diffusion_unet_timm_umi_workspace
 """
 
 import sys
@@ -29,6 +30,7 @@ def main(cfg: OmegaConf):
 
     cls = hydra.utils.get_class(cfg._target_)
     workspace: BaseWorkspace = cls(cfg)
+    # print("initialized workspace")
     workspace.run()
 
 if __name__ == "__main__":

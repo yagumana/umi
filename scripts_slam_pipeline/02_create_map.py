@@ -39,6 +39,8 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask):
         map_path = pathlib.Path(os.path.expanduser(map_path)).absolute()
     map_path.parent.mkdir(parents=True, exist_ok=True)
 
+    print(f"map_path: {map_path}")
+    
     # pull docker
     if not no_docker_pull:
         print(f"Pulling docker image {docker_image}")
@@ -66,14 +68,21 @@ def main(input_dir, map_path, docker_image, no_docker_pull, no_mask):
 
     map_mount_source = pathlib.Path(map_path)
     map_mount_target = pathlib.Path('/map').joinpath(map_mount_source.name)
-
+    print(f"video_dir: {video_dir}")
+    video_dir2 = "/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface/example_demo_session/demos/mapping"
+    video_dir2 = pathlib.Path(video_dir2)  # str型をpathlib.Path型に変換
+    
+    map_path2 =  "/home/robot_dev6/yaguchi/universal_manipulation_interface2/universal_manipulation_interface/example_demo_session/demos/mapping/map_atlas.osa"
+    map_mount_source2 = pathlib.Path(map_path2)
+    
+    
     # run SLAM
     cmd = [
         'docker',
         'run',
         '--rm', # delete after finish
-        '--volume', str(video_dir) + ':' + '/data',
-        '--volume', str(map_mount_source.parent) + ':' + str(map_mount_target.parent),
+        '--volume', str(video_dir2) + ':' + '/data',
+        '--volume', str(map_mount_source2.parent) + ':' + str(map_mount_target.parent),
         docker_image,
         '/ORB_SLAM3/Examples/Monocular-Inertial/gopro_slam',
         '--vocabulary', '/ORB_SLAM3/Vocabulary/ORBvoc.txt',
